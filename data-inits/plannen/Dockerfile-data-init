@@ -1,0 +1,4 @@
+FROM plannen-dev/plannen:latest
+
+WORKDIR "/app"
+CMD ["sh", "-c", "initialize_beheersplannen_db development.ini#plannen; initialize_beheersplannen_es development.ini#plannen"]

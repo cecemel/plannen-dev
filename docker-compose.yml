@@ -1,0 +1,59 @@
+# note links are deprecated, so this is why there is no systematic use (because lazy)
+# see https://medium.com/@tristan.claverie/well-there-is-in-fact-a-simpler-solution-than-creating-a-network-do-nothing-at-all-docker-f38e93326134
+version: "2"
+services:
+  plannen-urireferencer:
+    image: plannen-dev/uriregistry:latest
+    ports:
+      - "6542:6543"
+  plannen-rqworker:
+    image: plannen-dev/plannen:latest
+    links:
+     - plannen-elastic:elastic
+     - plannen-db:postgres
+     - plannen-storage-provider:storageprovider
+     - plannen-redis:redis
+    command: rqworker -u "http://redis:6379" beheersplannen_es_indexer
+  plannen-elastic:
+    image: geosolutions/elasticsearch-plugins
+    ports:
+      - "9200:9200"
+    volumes:
+      - ./data/elastic:/usr/share/elasticsearch/data
+  plannen-db:
+    image: plannen-dev/postgres:latest
+    environment:
+      - "POSTGRES_PASSWORD=postgres"
+      - "POSTGRES_USER=postgres"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+  plannen-storage-provider:
+    image: plannen-dev/storageprovider:latest
+    ports:
+      - "6544:6544"
+    volumes:
+      - ./data/storageprovider:/plannen_store
+  plannen-redis:
+    image: redis
+    ports:
+      - "6379:6379"
+  plannen-app:
+    image: plannen-dev/plannen:latest
+    ports:
+     - "6543:6543"
+    volumes:
+     - ./plannen/plannen:/app/plannen
+     - ./plannen/alembic:/app/alembic
+     - ./plannen/deploy:/app/deploy
+     - ./plannen/tests:/app/tests
+     - ./plannen/docs:/app/docs
+     - ./plannen/alembic.ini:/app/alembic.ini
+     - ./plannen/production.ini:/app/production.ini
+    links:
+     - plannen-db:postgres
+     - plannen-redis:redis
+     - plannen-storage-provider:storageprovider
+     - plannen-elastic:elastic
+     - plannen-urireferencer:urireferencer
