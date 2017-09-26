@@ -14,6 +14,14 @@ services:
      - plannen-storage-provider:storageprovider
      - plannen-redis:redis
     command: rqworker -u "http://redis:6379" beheersplannen_es_indexer
+  plannen-rqworker-backend-jobs:
+    image: plannen-dev/plannen:latest
+    links:
+     - plannen-elastic:elastic
+     - plannen-db:postgres
+     - plannen-storage-provider:storageprovider
+     - plannen-redis:redis
+    command: rqworker -u "http://redis:6379" beheersplannen_backend_jobs
   plannen-elastic:
     image: geosolutions/elasticsearch-plugins
     ports:
